@@ -10,7 +10,7 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="/", intents=intents)
 
-class_color = {
+CLASS_COLOR = {
     "Death Knight": 0xC41F3B,
     "Demon Hunter": 0xA330C9,
     "Druid": 0xFF7D0A,
@@ -46,32 +46,30 @@ async def meme(interaction: discord.Integration):
 # raiderio
 @bot.tree.command(name="score", description="Get Raider.IO Mythic+ score")
 async def score(interaction: discord.Integration, region: str, realm: str, name: str):
-    url = f"https://raider.io/api/v1/characters/profile?access_key=RIOFhQ9geZ5cazXpVQ5X4PPKk&region={region}&realm={realm}&name={name}&fields=mythic_plus_scores_by_season:current"
+    url = f"https://raider.io/api/v1/characters/profile?access_key=RIOFhQ9geZ5cazXpVQ5X4PPKk&region={region}&realm={realm}&name={name}&fields=mythic_plus_scores_by_season:current,active_spec_name"
     res = requests.get(url)
 
     if res.status_code != 200:
         await interaction.response.send_message("❌ Failed to retrieve score ❌")
 
-    # try:
-    #     data = res.json()
-    #     score = data["mythic_plus_scores_by_season"][0]["scores"]["all"]
-    #     msg = f"**{name.title()}** (**{realm.title()}**, **{region.upper()}**)'s current M+ score is **{score}**"
-    #     await interaction.response.send_message(msg)
-
     try:
         data = res.json()
         score = data["mythic_plus_scores_by_season"][0]["scores"]["all"]
         char_class = data.get("class", "Unknown")
-        race = data.get("race", "Unknown")
+        # race = data.get("race", "Unknown")
         thumbnail = data.get("thumbnail_url", "")
+        spec = data.get("active_spec_name", "")
+        # spec_key = f"{char_class}:{spec}"
+        # spec_icon_url = SPEC_ICONS.get(spec_key, "")
 
         embed = discord.Embed(
             title=f"**{name.title()}**'s Mythic+ Score",
             description=f"**Realm**: `{realm.title()}`\n**Region**: `{region.upper()}`",
-            color=class_color.get(char_class, 0x2F3136)
+            color=CLASS_COLOR.get(char_class, 0x2F3136)
         )
+
         embed.add_field(name="Score", value=f"**{score}**", inline=True)
-        embed.add_field(name="Class / Race", value=f"{char_class} / {race}", inline=True)
+        embed.add_field(name="Spec / Class", value=f"{spec} / {char_class}", inline=True)
 
         if thumbnail:
             embed.set_thumbnail(url=thumbnail)
