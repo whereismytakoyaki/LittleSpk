@@ -29,6 +29,20 @@ CLASS_COLOR = {
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
+def fetch_score_tiers():
+    url = f"https://raider.io/api/v1/mythic-plus/score-tiers?access_key=RIOFhQ9geZ5cazXpVQ5X4PPKk"
+    res = requests.get(url)
+    return res.json() if res.status_code == 200 else []
+
+def get_score_color(score, tiers):
+    for tier in tiers:
+        if score >= tier["score"]:
+            hexcolor = tier["rgbHex"]
+            return discord.Color(int(hexcolor[1:], 16))
+    return discord.Color.default()
+
+SCORE_TIERS = fetch_score_tiers()
+
 # bot ready
 @bot.event
 async def on_ready():
@@ -61,11 +75,13 @@ async def score(interaction: discord.Integration, region: str, realm: str, name:
         spec = data.get("active_spec_name", "")
         # spec_key = f"{char_class}:{spec}"
         # spec_icon_url = SPEC_ICONS.get(spec_key, "")
+        color = get_score_color(score, SCORE_TIERS)
 
         embed = discord.Embed(
             title=f"**{name.title()}**'s Mythic+ Score",
             description=f"**Realm**: `{realm.title()}`\n**Region**: `{region.upper()}`",
-            color=CLASS_COLOR.get(char_class, 0x2F3136)
+            # color=CLASS_COLOR.get(char_class, 0x2F3136)
+            color=color
         )
 
         embed.add_field(name="Score", value=f"**{score}**", inline=True)
